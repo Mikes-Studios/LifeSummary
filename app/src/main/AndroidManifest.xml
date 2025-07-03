@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!-- Runtime-granted permissions -->
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.INTERNET" />
+
+<application
+    android:name=".LifeSummaryApp"
+    android:allowBackup="true"
+    android:label="@string/app_name"
+    android:theme="@style/Theme.LifeSummary">
+
+    <!-- LAUNCHER ACTIVITY -->
+    <activity
+        android:name=".MainActivity"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
+        </intent-filter>
+    </activity>
+
+    <activity android:name=".SummariesActivity" android:exported="false" />
+    <activity android:name=".TranscriptsActivity" android:exported="false" />
+    <activity
+        android:name=".SettingsActivity"
+        android:exported="false"
+        android:theme="@style/Theme.LifeSummary.Dialog" />
+    <activity android:name=".Summary30Activity" android:exported="false" />
+    <activity android:name=".SummaryWindowActivity" android:exported="false" />
+    <!-- RecordingsActivity removed -->
+
+    <service
+        android:name=".MicCaptureService"
+        android:exported="false"
+        android:foregroundServiceType="microphone" />
+
+</application>
+</manifest>

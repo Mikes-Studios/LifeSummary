@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.LifeSummary" parent="Theme.AppCompat.DayNight.NoActionBar" />
+
+    <!-- Dialog style for Settings -->
+    <style name="Theme.LifeSummary.Dialog" parent="Theme.AppCompat.DayNight.Dialog">
+        <!-- You can further customize width/height via window attributes if desired -->
+    </style>
+</resources>

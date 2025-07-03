@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/nav_home" android:title="Home" android:icon="@android:drawable/ic_menu_view" />
+        <item android:id="@+id/nav_summaries" android:title="Summaries" android:icon="@android:drawable/ic_menu_agenda" />
+        <item android:id="@+id/nav_summaries30" android:title="30-min Summaries" android:icon="@android:drawable/ic_menu_recent_history" />
+        <item android:id="@+id/nav_summaries60" android:title="1-Hour Summaries" android:icon="@android:drawable/ic_menu_recent_history" />
+        <item android:id="@+id/nav_summaries120" android:title="2-Hour Summaries" android:icon="@android:drawable/ic_menu_recent_history" />
+        <item android:id="@+id/nav_summaries240" android:title="4-Hour Summaries" android:icon="@android:drawable/ic_menu_recent_history" />
+        <item android:id="@+id/nav_transcripts" android:title="Transcripts" android:icon="@android:drawable/ic_menu_edit" />
+        <item android:id="@+id/nav_settings" android:title="Settings" android:icon="@android:drawable/ic_menu_manage" />
+    </group>
+</menu> 
