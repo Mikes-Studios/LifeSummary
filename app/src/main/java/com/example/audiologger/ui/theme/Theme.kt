@@ -1,4 +1,4 @@
-package com.example.audiologger.ui.theme
+package com.mikestudios.lifesummary.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -53,6 +53,7 @@ fun LifeSummaryTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = Shapes,
         content = content
     )
 }

@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -8,9 +8,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import java.io.File
-import com.example.audiologger.ui.theme.LifeSummaryTheme
+import com.mikestudios.lifesummary.ui.theme.LifeSummaryTheme
 import androidx.compose.foundation.layout.padding
-import com.example.audiologger.SummaryUtils
+import com.mikestudios.lifesummary.SummaryUtils
+import androidx.compose.foundation.background
+import com.mikestudios.lifesummary.ui.theme.primaryGradient
 
 @OptIn(ExperimentalMaterial3Api::class)
 class Summary30Activity : AppCompatActivity() {
@@ -20,6 +22,7 @@ class Summary30Activity : AppCompatActivity() {
         setContent {
             LifeSummaryTheme {
                 Scaffold(
+                    modifier = Modifier.background(primaryGradient()),
                     topBar = {
                         TopAppBar(
                             title = { Text("30-min Summaries") },

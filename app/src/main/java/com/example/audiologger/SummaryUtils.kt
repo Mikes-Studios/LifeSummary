@@ -1,7 +1,8 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.content.Context
 import java.io.File
+import com.mikestudios.lifesummary.DriveSync
 
 object SummaryUtils {
     fun dirName(windowMinutes: Int) = "summaries${windowMinutes}"
@@ -24,5 +25,31 @@ object SummaryUtils {
                 LogEntry(ts, text)
             }
             .asReversed()
+    }
+
+    /**
+     * Permanently delete a summary (and any associated transcript) identified by its timestamp.
+     * Removes the matching line from summaries, transcripts and window-summary files if present.
+     */
+    fun deleteEntry(ctx: Context, timestamp: Long) {
+        val files = mutableListOf<File>()
+        // Base summaries & transcripts
+        ctx.getExternalFilesDir("summaries")?.let { files += File(it, "summaries.txt") }
+        ctx.getExternalFilesDir("transcripts")?.let { files += File(it, "transcripts.txt") }
+        // Aggregated summary windows
+        listOf(30, 60, 120, 240).forEach { w ->
+            ctx.getExternalFilesDir(dirName(w))?.let { dir -> files += File(dir, fileName(w)) }
+        }
+
+        val prefix = "${timestamp},"
+        files.forEach { f ->
+            if (!f.exists()) return@forEach
+            val newLines = f.readLines().filterNot { it.startsWith(prefix) }
+            f.writeText(newLines.joinToString("\n"))
+            // Push updated file to Drive
+            DriveSync.uploadFile(ctx, f.parentFile.name, f.name)
+        }
+        // summaries.txt deletion handled above but ensure remote base summaries updated as well
+        DriveSync.uploadFile(ctx, "summaries", "summaries.txt")
     }
 } 

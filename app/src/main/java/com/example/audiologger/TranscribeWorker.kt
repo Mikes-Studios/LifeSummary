@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.content.Context
 import android.util.Log
@@ -13,8 +13,9 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.json.JSONArray
 import java.io.File
-import com.example.audiologger.SecurePrefs
+import com.mikestudios.lifesummary.SecurePrefs
 import java.util.concurrent.TimeUnit
+import com.mikestudios.lifesummary.DriveSync
 
 /**
  * Worker that sends the recorded audio to the OpenAI Audio endpoint for
@@ -56,10 +57,15 @@ class TranscribeWorker(
             return@withContext Result.failure()
         }
 
-        val client = OkHttpClient()
+        // Use generous timeouts – transcription of 10-minute recordings can easily take >30s
+        val client = OkHttpClient.Builder()
+            .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(5, java.util.concurrent.TimeUnit.MINUTES)
+            .readTimeout(5, java.util.concurrent.TimeUnit.MINUTES)
+            .build()
         return@withContext try {
             val transcript = transcribeAudio(client, apiKey, audioFile)
-            if (transcript.isBlank() || transcript.length < 5 ) {
+            if (transcript.isBlank() || transcript.length < 40 ) {
                 Log.d(TAG, "Transcript too short (${transcript.length} chars) – skipping")
                 // Delete the raw recording after processing attempt
                 audioFile.delete()
@@ -69,12 +75,16 @@ class TranscribeWorker(
             // Use one timestamp for both transcript and summary so they can be correlated later
             val now = System.currentTimeMillis()
 
-            // Persist full transcript to file for later viewing
+            // Persist full transcript to file for later viewing. Collapse embedded newlines so
+            // each transcript occupies exactly one line in the CSV-like log file.
+            val oneLineTranscript = transcript.replace("\n", " ").replace("\r", " ").trim()
             applicationContext.getExternalFilesDir("transcripts")!!.apply {
                 mkdirs()
                 File(this, "transcripts.txt").appendText(
-                    "${now},$transcript\n"
+                    "${now},$oneLineTranscript\n"
                 )
+                // upload transcripts file
+                DriveSync.uploadFile(applicationContext, "transcripts", "transcripts.txt")
             }
             val (title, summary) = summariseText(client, apiKey, transcript)
             Log.i(TAG, "Summary title: $title")
@@ -86,6 +96,8 @@ class TranscribeWorker(
             File(dir, "summaries.txt").appendText(
                 "${now},$title|$summary\n"
             )
+            // Upload full summaries file to Google Drive if sync enabled
+            DriveSync.uploadAllSummaries(applicationContext)
 
             // Generate aggregated summaries for multiple windows
             listOf(30, 60, 120, 240).forEach { window ->
@@ -105,7 +117,7 @@ class TranscribeWorker(
         val body = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             // model name subject to change – refer to OpenAI docs
-            .addFormDataPart("model", "gpt-4o-transcribe")
+            .addFormDataPart("model", SecurePrefs.getTranscriptionModel())
             .addFormDataPart(
                 "file",
                 file.name,
@@ -142,7 +154,7 @@ class TranscribeWorker(
         }
 
         val payload = JSONObject().apply {
-            put("model", "gpt-4.1")
+            put("model", SecurePrefs.getSummaryModel())
             put("messages", messages)
         }
 
@@ -186,8 +198,9 @@ class TranscribeWorker(
             line.substring(idx + 1)
         }
 
-        // Require at least one transcript roughly every five minutes
-        val minSegments = windowMinutes / 5
+        // Recordings are cut every 10 minutes (see MicCaptureService). Require at least
+        // one transcript per recording segment within the window.
+        val minSegments = windowMinutes / 10
         if (transcripts.size < minSegments) return
 
         val sumDir = applicationContext.getExternalFilesDir(SummaryUtils.dirName(windowMinutes))!!
@@ -204,5 +217,6 @@ class TranscribeWorker(
         val combined = transcripts.joinToString("\n")
         val (title, summary) = summariseText(client, apiKey, combined)
         sumFile.appendText("${now},$title|$summary\n")
+        DriveSync.uploadFile(applicationContext, SummaryUtils.dirName(windowMinutes), SummaryUtils.fileName(windowMinutes))
     }
 } 

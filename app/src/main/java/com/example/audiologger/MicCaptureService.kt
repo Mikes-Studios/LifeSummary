@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -60,7 +60,7 @@ class MicCaptureService : Service() {
             prepare(); start()
         }
         recStart = android.os.SystemClock.elapsedRealtime()
-        nextCut = android.os.SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(5)
+        nextCut = android.os.SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(10)
     }
 
     private fun stopRecAndQueue() {

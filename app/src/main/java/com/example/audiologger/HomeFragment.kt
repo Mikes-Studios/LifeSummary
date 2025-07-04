@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.Manifest
 import android.content.Intent
@@ -19,6 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
+import com.mikestudios.lifesummary.ui.theme.LifeSummaryTheme
+import com.mikestudios.lifesummary.ui.theme.primaryGradient
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 
 class HomeFragment : Fragment() {
 
@@ -39,7 +43,7 @@ class HomeFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                com.example.audiologger.ui.theme.LifeSummaryTheme {
+                LifeSummaryTheme {
                     recordingState = remember { mutableStateOf(MicCaptureService.isRunning) }
                     HomeScreen(recordingState.value) {
                         ensurePermsThenToggle()
@@ -53,16 +57,27 @@ class HomeFragment : Fragment() {
     @Composable
     private fun HomeScreen(isRecording: Boolean, onToggle: () -> Unit) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF101010))
+                ,
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                LargeFloatingActionButton(onClick = onToggle) {
+                Button(
+                    onClick = onToggle,
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    modifier = Modifier
+                        .height(64.dp)
+                        .width(200.dp)
+                ) {
                     val icon = if (isRecording) Icons.Default.Stop else Icons.Default.Mic
                     Icon(
                         icon,
                         contentDescription = if (isRecording) "Stop recording" else "Start recording",
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 
@@ -70,7 +85,8 @@ class HomeFragment : Fragment() {
 
                 Text(
                     text = if (isRecording) "Recording…" else "Tap to start recording",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
                 )
             }
         }

@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.content.Context
 import android.content.Intent
@@ -10,7 +10,9 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
-import com.example.audiologger.ui.theme.LifeSummaryTheme
+import com.mikestudios.lifesummary.ui.theme.LifeSummaryTheme
+import androidx.compose.foundation.background
+import com.mikestudios.lifesummary.ui.theme.primaryGradient
 
 /**
  * Generic screen that shows summaries for an arbitrary time window (in minutes)
@@ -34,6 +36,7 @@ class SummaryWindowActivity : AppCompatActivity() {
         setContent {
             LifeSummaryTheme {
                 Scaffold(
+                    modifier = Modifier.background(primaryGradient()),
                     topBar = {
                         TopAppBar(
                             title = { Text(titleText) },

@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,10 +19,20 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import com.example.audiologger.ui.theme.LifeSummaryTheme
+import com.mikestudios.lifesummary.ui.theme.LifeSummaryTheme
 import java.io.File
 import androidx.compose.runtime.Composable
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
+import com.mikestudios.lifesummary.ui.theme.primaryGradient
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.platform.LocalContext
+import android.content.IntentFilter
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 
 class SummariesFragment : Fragment() {
 
@@ -33,7 +43,8 @@ class SummariesFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                val entries = loadSummaries()
+                val initial = loadSummaries()
+                val entries = remember { mutableStateListOf<LogEntry>().apply { addAll(initial) } }
                 LifeSummaryTheme {
                     SummaryScreen(entries)
                 }
@@ -43,8 +54,10 @@ class SummariesFragment : Fragment() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun SummaryScreen(entries: List<LogEntry>) {
+    private fun SummaryScreen(entries: SnapshotStateList<LogEntry>) {
+        val ctx = LocalContext.current
         Scaffold(
+            modifier = Modifier.background(primaryGradient()),
             floatingActionButton = {
                 FloatingActionButton(onClick = {
                     // return to home
@@ -55,8 +68,24 @@ class SummariesFragment : Fragment() {
             }
         ) { padding ->
             Surface(modifier = Modifier.padding(padding)) {
-                LogListWithSearch(entries)
+                LogListWithSearch(entries, onDelete = { entry ->
+                    entries.remove(entry)
+                    SummaryUtils.deleteEntry(ctx, entry.timestamp)
+                })
             }
+        }
+
+        // Listen for background merges that update the summaries file
+        androidx.compose.runtime.DisposableEffect(Unit) {
+            val filter = IntentFilter(DriveSync.ACTION_SUMMARIES_UPDATED)
+            val recv = object : BroadcastReceiver() {
+                override fun onReceive(c: Context?, i: Intent?) {
+                    val updated = loadSummaries()
+                    entries.clear(); entries.addAll(updated)
+                }
+            }
+            ctx.registerReceiver(recv, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
+            onDispose { ctx.unregisterReceiver(recv) }
         }
     }
 

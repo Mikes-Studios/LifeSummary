@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.content.Context
 import androidx.work.CoroutineWorker

@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,10 +33,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
 import android.content.Intent
+import androidx.compose.ui.graphics.graphicsLayer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LogListWithSearch(allEntries: List<LogEntry>) {
+fun LogListWithSearch(
+    allEntries: List<LogEntry>,
+    onDelete: ((LogEntry) -> Unit)? = null
+) {
     var searchQuery by remember { mutableStateOf("") }
     
     // State for incremental loading
@@ -58,7 +63,7 @@ fun LogListWithSearch(allEntries: List<LogEntry>) {
         ) { }
         
         // Filter entries based on search
-        val filtered = remember(searchQuery, allEntries) {
+        val filtered = remember(searchQuery, allEntries.size) {
             if (searchQuery.isBlank()) allEntries
             else allEntries.filter { 
                 it.text.contains(searchQuery, ignoreCase = true) 
@@ -66,7 +71,7 @@ fun LogListWithSearch(allEntries: List<LogEntry>) {
         }
         
         // Slice based on current batch size
-        val visible = remember(filtered, batchSize) {
+        val visible = remember(filtered.size, batchSize) {
             filtered.take(batchSize)
         }
 
@@ -85,13 +90,17 @@ fun LogListWithSearch(allEntries: List<LogEntry>) {
                 }
         }
         
-        LogList(visible, listState)
+        LogList(visible, listState, onDelete)
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LogList(entries: List<LogEntry>, listState: LazyListState) {
+fun LogList(
+    entries: List<LogEntry>,
+    listState: LazyListState,
+    onDelete: ((LogEntry) -> Unit)? = null
+) {
     if (entries.isEmpty()) {
         // Empty state
         Box(
@@ -157,9 +166,9 @@ fun LogList(entries: List<LogEntry>, listState: LazyListState) {
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                
-                items(dayEntries) { entry ->
-                    LogEntryCard(entry)
+
+                items(dayEntries, key = { it.timestamp }) { entry ->
+                    LogEntryCard(entry, onDelete)
                 }
             }
         }
@@ -168,15 +177,17 @@ fun LogList(entries: List<LogEntry>, listState: LazyListState) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LogEntryCard(entry: LogEntry) {
+private fun LogEntryCard(entry: LogEntry, onDelete: ((LogEntry) -> Unit)? = null) {
     var expanded by remember { mutableStateOf(false) }
     var showTranscript by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
     val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
     
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
+            .graphicsLayer { alpha = 0.85f }
             .animateContentSize()
             .combinedClickable(
                 onClick = {
@@ -185,12 +196,12 @@ private fun LogEntryCard(entry: LogEntry) {
                 }
             ),
         colors = CardDefaults.cardColors(
-            containerColor = if (expanded) 
-                MaterialTheme.colorScheme.secondaryContainer 
-            else MaterialTheme.colorScheme.surface
+            containerColor = if (expanded)
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+            else MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (expanded) 4.dp else 1.dp
+            defaultElevation = 0.dp
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -260,7 +271,7 @@ private fun LogEntryCard(entry: LogEntry) {
                 }
             }
             
-            // Action buttons (Copy, Share, Transcript toggle)
+            // Action buttons (Copy, Share, Delete, Transcript toggle)
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -295,6 +306,13 @@ private fun LogEntryCard(entry: LogEntry) {
                     Icon(Icons.Default.Share, contentDescription = "Share")
                 }
 
+                // Delete (if provided)
+                if (onDelete != null) {
+                    IconButton(onClick = { confirmDelete = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    }
+                }
+
                 // Transcript toggle (only if transcript exists)
                 if (!transcriptText.isNullOrBlank()) {
                     val label = if (showTranscript) "Hide Transcript" else "Show Transcript"
@@ -307,6 +325,23 @@ private fun LogEntryCard(entry: LogEntry) {
                 }
             }
         }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete entry?") },
+            text = { Text("This will permanently delete the summary and its transcript.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    onDelete?.invoke(entry)
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) { Text("Cancel") }
+            }
+        )
     }
 }
 

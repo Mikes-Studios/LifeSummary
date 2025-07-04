@@ -7,10 +7,14 @@
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 <uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
 <application
     android:name=".LifeSummaryApp"
     android:allowBackup="true"
+    android:icon="@mipmap/ic_launcher"
+    android:roundIcon="@mipmap/ic_launcher_round"
     android:label="@string/app_name"
     android:theme="@style/Theme.LifeSummary">
 
@@ -29,7 +33,7 @@
     <activity
         android:name=".SettingsActivity"
         android:exported="false"
-        android:theme="@style/Theme.LifeSummary.Dialog" />
+        android:theme="@style/Theme.LifeSummary" />
     <activity android:name=".Summary30Activity" android:exported="false" />
     <activity android:name=".SummaryWindowActivity" android:exported="false" />
     <!-- RecordingsActivity removed -->
@@ -38,6 +42,16 @@
         android:name=".MicCaptureService"
         android:exported="false"
         android:foregroundServiceType="microphone" />
+
+    <!-- Schedule start/stop receiver -->
+    <receiver android:name=".ScheduleReceiver" android:exported="false" />
+
+    <!-- Re-register alarms on device reboot -->
+    <receiver android:name=".BootReceiver" android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+        </intent-filter>
+    </receiver>
 
 </application>
 </manifest>

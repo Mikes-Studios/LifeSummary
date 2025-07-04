@@ -5,24 +5,39 @@ plugins {
 }
 
 android {
-    namespace = "com.example.audiologger"
+    namespace = "com.mikestudios.lifesummary"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.audiologger"
+        applicationId = "com.mikestudios.lifesummary"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 7
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // OpenAI key is now provided at runtime via SecurePrefs (see Settings screen)
     }
 
+    // Signing configuration for release builds
+    signingConfigs {
+        create("release") {
+            // Keystore details are supplied via environment variables at build time
+            storeFile = rootProject.file(System.getenv("LS_KEYSTORE") ?: "keystore.jks")
+            storePassword = System.getenv("LS_KEYSTORE_PW")
+            keyAlias = "release"
+            keyPassword = System.getenv("LS_KEY_PW")
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Enable R8/ProGuard and resource shrinking for smaller, safer APKs
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -40,6 +55,17 @@ android {
         compose = true
         viewBinding = true
         buildConfig = true
+    }
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt"
+            )
+        }
     }
 }
 
@@ -66,4 +92,8 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.http-client:google-http-client-gson:1.43.3")
 }

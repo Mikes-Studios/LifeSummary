@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -8,8 +8,10 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import java.io.File
-import com.example.audiologger.ui.theme.LifeSummaryTheme
+import com.mikestudios.lifesummary.ui.theme.LifeSummaryTheme
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import com.mikestudios.lifesummary.ui.theme.primaryGradient
 
 @OptIn(ExperimentalMaterial3Api::class)
 class TranscriptsActivity : AppCompatActivity() {
@@ -19,6 +21,7 @@ class TranscriptsActivity : AppCompatActivity() {
         setContent {
             LifeSummaryTheme {
                 Scaffold(
+                    modifier = Modifier.background(primaryGradient()),
                     topBar = {
                         TopAppBar(
                             title = { Text("Transcripts") },

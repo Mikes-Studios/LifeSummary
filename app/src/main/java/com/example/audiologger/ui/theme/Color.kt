@@ -1,4 +1,4 @@
-package com.example.audiologger.ui.theme
+package com.mikestudios.lifesummary.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

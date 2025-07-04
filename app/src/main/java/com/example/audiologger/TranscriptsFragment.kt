@@ -1,4 +1,4 @@
-package com.example.audiologger
+package com.mikestudios.lifesummary
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -20,9 +20,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import com.example.audiologger.ui.theme.LifeSummaryTheme
+import com.mikestudios.lifesummary.ui.theme.LifeSummaryTheme
 import java.io.File
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
+import com.mikestudios.lifesummary.ui.theme.primaryGradient
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import android.content.IntentFilter
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 
 class TranscriptsFragment : Fragment() {
     override fun onCreateView(
@@ -43,7 +53,10 @@ class TranscriptsFragment : Fragment() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun TranscriptsScreen(entries: List<LogEntry>) {
+        val list = remember { mutableStateListOf<LogEntry>().apply { addAll(entries) } }
+
         Scaffold(
+            modifier = Modifier.background(primaryGradient()),
             floatingActionButton = {
                 FloatingActionButton(onClick = {
                     (requireActivity() as MainActivity).loadFragment(HomeFragment())
@@ -53,8 +66,22 @@ class TranscriptsFragment : Fragment() {
             }
         ) { padding ->
             Surface(modifier = Modifier.padding(padding)) {
-                LogListWithSearch(entries)
+                LogListWithSearch(list)
             }
+        }
+
+        // Broadcast receiver for transcripts updates
+        val ctx = LocalContext.current
+        androidx.compose.runtime.DisposableEffect(Unit) {
+            val filter = IntentFilter(DriveSync.ACTION_TRANSCRIPTS_UPDATED)
+            val recv = object : BroadcastReceiver() {
+                override fun onReceive(c: Context?, i: Intent?) {
+                    val updated = loadTranscripts()
+                    list.clear(); list.addAll(updated)
+                }
+            }
+            ctx.registerReceiver(recv, filter, android.content.Context.RECEIVER_NOT_EXPORTED)
+            onDispose { ctx.unregisterReceiver(recv) }
         }
     }
 
